@@ -45,7 +45,8 @@ Message: ${input}
 
 Focus on: urgent language, credential requests, social engineering, suspicious links.`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CONFIG.GEMINI_API_KEY}`, {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CONFIG.GEMINI_API_KEY}`;
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -67,12 +68,15 @@ Focus on: urgent language, credential requests, social engineering, suspicious l
     }
     
     const data = await response.json();
-    const text = data.candidates[0].content.parts[0].text;
-    
-    // Extract JSON from response
-    const jsonMatch = text.match(/\{[^}]+\}/);
-    if (!jsonMatch) throw new Error('No JSON found in response');
-    
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+
+    // Extract JSON robustly (handles code fences and multiline JSON)
+    const cleaned = text.replace(/^```[a-zA-Z]*\n?|```$/g, '').trim();
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.warn('Gemini raw text (no JSON found):', text);
+      throw new Error('No JSON found in response');
+    }
     const aiResult = JSON.parse(jsonMatch[0]);
     
     return {
@@ -84,6 +88,11 @@ Focus on: urgent language, credential requests, social engineering, suspicious l
     };
   } catch (error) {
     console.warn('AI analysis failed:', error);
+    // Surface minimal diagnostics for users in console
+    console.warn('Gemini diagnostics:', {
+      hasKey: Boolean(CONFIG.GEMINI_API_KEY),
+      keyPrefix: CONFIG.GEMINI_API_KEY ? CONFIG.GEMINI_API_KEY.slice(0, 6) + '...' : 'none',
+    });
     return { aiScore: 0, confidence: 0, threats: [], reasoning: 'AI analysis failed', source: 'Error' };
   }
 }
