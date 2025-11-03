@@ -62,6 +62,18 @@ This project is built with:
 
 ## How can I deploy this project?
 
+## AI setup (Gemini)
+
+1. Create a `.env` at the project root based on `.env.example`:
+
+```
+VITE_GEMINI_API_KEY=your_key_here
+```
+
+2. Restart the dev server after changing `.env`.
+
+3. When the key is present, the app performs AI-enhanced analysis. If the console shows "AI analysis disabled or failed" or "AI unavailable, using heuristics only", verify the env var name `VITE_GEMINI_API_KEY` and that you restarted `npm run dev`.
+
 Simply open [Lovable](https://lovable.dev/projects/96c4153b-dafb-49d1-ba81-2001b3be3a60) and click on Share -> Publish.
 
 ## Can I connect a custom domain to my Lovable project?

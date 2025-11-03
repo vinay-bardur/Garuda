@@ -11,6 +11,10 @@ interface AnalysisResultsProps {
 }
 
 export function AnalysisResults({ result, input, type }: AnalysisResultsProps) {
+  const aiConfidence = (result as any)?.aiAnalysis?.confidence as number | undefined;
+  const confidence = typeof aiConfidence === 'number' && aiConfidence > 0 ? aiConfidence : result.riskScore;
+  const isSpam = result.riskLevel === 'high' || result.riskLevel === 'critical';
+  const label = `${isSpam ? 'Spam' : 'Not Spam'} (${Math.round(confidence)}% confidence)`;
   const handleDownloadReport = () => {
     const report = generateReport(result, input, type);
     const blob = new Blob([report], { type: 'application/json' });
@@ -26,6 +30,12 @@ export function AnalysisResults({ result, input, type }: AnalysisResultsProps) {
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Spam/Not Spam label */}
+      <div className="flex justify-center">
+        <div className={`px-4 py-2 rounded-full text-sm font-medium border ${isSpam ? 'bg-destructive/10 text-destructive border-destructive/30' : 'bg-success/10 text-success border-success/30'}`}>
+          {label}
+        </div>
+      </div>
       {/* Risk Score */}
       <RiskScore score={result.riskScore} level={result.riskLevel} />
 
